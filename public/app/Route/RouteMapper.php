@@ -326,9 +326,16 @@ class RouteMapper
      * @throws StatusErrorException
      *
      */
-    private function run(RouteEntity $routeEntity, array $params): void
+    private function run(string $url, string $method): void
     {
+        $routeEntity = $this->getRouteEntity($url, $method);
+        $params = $this->getParams($url, $routeEntity->urlPattern);
+
         $methodParams = $this->getMethodParams($routeEntity);
+
+        if ($method === 'POST') {
+            $params[self::REQUEST_INDEX] = $_POST;
+        }
 
         try {
             $this->checkParamSet($params, $methodParams);
@@ -351,23 +358,11 @@ class RouteMapper
         $controllerInstance->$action(...$finalParams);
     }
 
-    /**
-     * @throws ReflectionException
-     * @throws StatusErrorException
-     * @throws InvalidRouteArgumentException
-     */
-    public function dispatch(string $path, string $method): void
+    public function dispatch(): void
     {
-        $routeEntity = $this->getRouteEntity($path, $method);
-        $params = $this->getParams($path, $routeEntity->urlPattern);
+        $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = $_SERVER['REQUEST_METHOD'];
 
-        if ($method === 'POST') {
-            $params[self::REQUEST_INDEX] = $_POST;
-        }
-
-        $this->run(
-            $routeEntity,
-            $params,
-        );
+        $this->run($url, $method);
     }
 }
