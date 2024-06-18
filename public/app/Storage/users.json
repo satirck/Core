@@ -27,16 +27,16 @@
     {
         "id": 6,
         "name": "Http Resp Name",
-        "email": "retd$cool.ry"
+        "email": "retd@cool.ry"
     },
     {
         "id": 7,
         "name": "Http Resp Name2",
-        "email": "mail.google$google.com"
+        "email": "mail.google@google.com"
     },
     {
         "id": 8,
         "name": "Alex",
-        "email": "mail.google$google.com"
+        "email": "mail.google@google.com"
     }
 ]

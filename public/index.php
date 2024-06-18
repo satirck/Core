@@ -7,4 +7,4 @@ require_once 'vendor/autoload.php';
 use App\Route\RouteMapper;
 
 $routeMapper = new RouteMapper('app/Route/Controllers');
-$routeMapper->dispatch();
+$routeMapper->run();
