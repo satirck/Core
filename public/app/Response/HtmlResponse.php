@@ -18,7 +18,6 @@ class HtmlResponse implements ResponseInterface
             }
 
             require_once $views_path;
-        } else
-            echo 'Not found';
+        }
     }
 }

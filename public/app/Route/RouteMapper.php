@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Route;
 
+use App\Response\HtmlResponse;
 use App\Route\Exceptions\{
     InvalidRouteArgumentException,
     MissingRouteArgumentException,
@@ -188,7 +189,10 @@ class RouteMapper
             return $routeEntity;
         }
 
-        throw new StatusErrorException('Url not found...', 404);
+        throw new StatusErrorException(
+            sprintf('Url %s not found...', $path),
+            404
+        );
     }
 
     private function getActionAndRegular(
@@ -305,7 +309,9 @@ class RouteMapper
 
             //TODO make prettier
             if ($typeName !== 'int' && $typeName !== 'string' && !class_exists($typeName)) {
-                throw new InvalidRouteArgumentException();
+                throw new InvalidRouteArgumentException(
+                    sprintf('Type: %s was not casting', $typeName)
+                );
             }
 
             if (class_exists($typeName) && method_exists($typeName, 'fromJson')) {
@@ -363,7 +369,17 @@ class RouteMapper
         $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
 
-        $this->dispatch($url, $method);
+        $data = [];
+
+        try {
+            $this->dispatch($url, $method);
+        } catch (StatusErrorException|InvalidRouteArgumentException|ReflectionException $e) {
+            http_response_code($e->getCode());
+            $data['code'] = $e->getCode();
+            $data['message'] = $e->getMessage();
+
+            HtmlResponse::View('404', $data);
+        }
 
     }
 }
