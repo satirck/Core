@@ -56,7 +56,9 @@ class UserController implements RouteControllerInterface
     {
         $data = array();
 
-        $data['user'] = $savedUser = $this->userRepository->save(json_encode($user));
+        $savedUser = $this->userRepository->save(json_encode($user));
+
+        $data['user'] = User::fromJson($savedUser);
 
         HtmlResponse::View('user',  $data);
     }
