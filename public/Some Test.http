@@ -1,6 +1,11 @@
 ###
-//get home view
 GET localhost/
+Content-Type: text/html
+###
+
+###
+GET localhost/
+Content-Type: application/json
 ###
 
 ###

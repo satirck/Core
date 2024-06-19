@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Route\Controllers;
 
 use App\Response\HtmlResponse;
+use App\Response\ResponseInterface;
 use App\Route\Attributes\{DomainKeyAttribute, MethodRouteAttribute};
 
 use App\Models\User;
@@ -19,7 +20,9 @@ class UserController implements RouteControllerInterface
 {
     protected UserRepository $userRepository;
 
-    public function __construct()
+    public function __construct(
+        protected ResponseInterface $response
+    )
     {
         $this->userRepository = new UserRepository();
     }
@@ -31,7 +34,14 @@ class UserController implements RouteControllerInterface
 
         $data['users'] = $users;
 
-        HtmlResponse::View('users', $data);
+        $this->response->view(
+            'users',
+            $data,
+            [
+                ResponseInterface::HTTP_STATUS_CODE => 200,
+                ResponseInterface::HTTP_MESSAGE_TEXT => 'Hello at users page',
+            ]
+        );
     }
 
     /**
@@ -44,11 +54,18 @@ class UserController implements RouteControllerInterface
         try {
             $user = $this->userRepository->getById($id);
             $data['user'] = $user;
-        }catch (EntityNotFoundException $exception){
-            throw new StatusErrorException( $exception->getMessage(), 404);
+        } catch (EntityNotFoundException $exception) {
+            throw new StatusErrorException($exception->getMessage(), 404);
         }
 
-        HtmlResponse::View('user',  $data);
+        $this->response->view(
+            'user',
+            $data,
+            [
+                ResponseInterface::HTTP_STATUS_CODE => 200,
+                ResponseInterface::HTTP_MESSAGE_TEXT => 'Hello at user page',
+            ]
+        );
     }
 
     #[MethodRouteAttribute('POST', '/users')]
@@ -56,11 +73,19 @@ class UserController implements RouteControllerInterface
     {
         $data = array();
 
-        $savedUser = $this->userRepository->save(json_encode($user));
+//        $savedUser = $this->userRepository->save(json_encode($user));
 
-        $data['user'] = User::fromJson($savedUser);
+//        $data['user'] = User::fromJson($savedUser);
+        $data['user'] = $user;
 
-        HtmlResponse::View('user',  $data);
+        $this->response->view(
+            'user',
+            $data,
+            [
+                ResponseInterface::HTTP_STATUS_CODE => 200,
+                ResponseInterface::HTTP_MESSAGE_TEXT => 'User have been created!',
+            ]
+        );
     }
 
 

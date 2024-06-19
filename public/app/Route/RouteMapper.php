@@ -5,24 +5,11 @@ declare(strict_types=1);
 namespace App\Route;
 
 use App\Response\HtmlResponse;
-use App\Route\Exceptions\{
-    InvalidRouteArgumentException,
-    MissingRouteArgumentException,
-    StatusErrorException
-};
-
-use App\Route\Attributes\{
-    DomainKeyAttribute,
-    MethodRouteAttribute
-};
-
-use App\Route\Entities\{
-    ActionEntity,
-    ControllerEntity,
-    RouteEntity,
-    MethodParam
-};
-
+use App\Response\JsonResponse;
+use App\Response\ResponseInterface;
+use App\Route\Attributes\{DomainKeyAttribute, MethodRouteAttribute};
+use App\Route\Entities\{ActionEntity, ControllerEntity, MethodParam, RouteEntity};
+use App\Route\Exceptions\{InvalidRouteArgumentException, MissingRouteArgumentException, StatusErrorException};
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
@@ -30,9 +17,13 @@ use ReflectionMethod;
 class RouteMapper
 {
     private array $routesControllers;
+    private ResponseInterface $response;
     private const REQUEST_INDEX = 'request';
     private const DOMAIN_KEY_SPECIAL = 'special';
     private const DOMAIN_KEY_GENERAL = 'general';
+    public const HTTP_RESPONSE_TYPE = 'X-Response-type';
+    public const HTTP_REQUEST_TYPE = 'X-Request-type';
+    public const HTTP_RESPONSE_LAYOUT = 'X-Response-Layout';
 
     /**
      * @throws ReflectionException
@@ -339,9 +330,7 @@ class RouteMapper
 
         $methodParams = $this->getMethodParams($routeEntity);
 
-        if ($method === 'POST') {
-            $params[self::REQUEST_INDEX] = $_POST;
-        }
+        $params[self::REQUEST_INDEX] = $_REQUEST;
 
         try {
             $this->checkParamSet($params, $methodParams);
@@ -358,10 +347,37 @@ class RouteMapper
             throw new StatusErrorException($e->getMessage(), 404, $e);
         }
 
-        $controllerInstance = new $routeEntity->controller();
+        $controllerInstance = new $routeEntity->controller(
+            $this->response
+        );
         $action = $routeEntity->action;
 
         $controllerInstance->$action(...$finalParams);
+    }
+
+
+    /**
+     * @return void
+     */
+    private function setResponseEntity(): void
+    {
+        $req_headers = apache_request_headers();
+        $onlyInnerContent = false;
+
+        if (!isset($req_headers[self::HTTP_RESPONSE_TYPE]) && is_array($req_headers)) {
+            $req_headers[self::HTTP_RESPONSE_TYPE] = ResponseInterface::HTTP_DEFAULT_CONTENT_TYPE;
+        }
+
+        if (isset($req_headers[self::HTTP_RESPONSE_LAYOUT]) && is_array($req_headers)) {
+            $onlyInnerContent = true;
+        }
+
+        $contentType = $req_headers[self::HTTP_RESPONSE_TYPE];
+
+        $this->response =
+            $contentType !== ResponseInterface::HTTP_DEFAULT_CONTENT_TYPE ?
+                new JsonResponse() :
+                new HtmlResponse($onlyInnerContent);
     }
 
     public function run(): void
@@ -369,16 +385,24 @@ class RouteMapper
         $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
 
+        $this->setResponseEntity();
+
         $data = [];
 
         try {
             $this->dispatch($url, $method);
         } catch (StatusErrorException|InvalidRouteArgumentException|ReflectionException $e) {
-            http_response_code($e->getCode());
             $data['code'] = $e->getCode();
             $data['message'] = $e->getMessage();
 
-            HtmlResponse::View('404', $data);
+            $this->response->view(
+                '404',
+                $data,
+                [
+                    ResponseInterface::HTTP_STATUS_CODE => $e->getCode(),
+                    ResponseInterface::HTTP_MESSAGE_TEXT => $e->getMessage(),
+                ]
+            );
         }
 
     }

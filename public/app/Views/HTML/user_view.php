@@ -1,3 +1,7 @@
+<h2>
+    To all <a href="http://localhost/users">users</a>
+</h2>
+
 <table style="border: 1px solid black">
     <thead>
     <tr>
@@ -20,6 +24,5 @@
         </tbody>
     ', $user->getID(), $user->getName(), $user->getEmail());
     } ?>
-
     </tbody>
 </table>
