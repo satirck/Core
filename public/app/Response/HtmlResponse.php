@@ -19,18 +19,20 @@ class HtmlResponse implements ResponseInterface
         return 'text/html';
     }
 
-    private function makeHTTPHeaders(array $headers): void
+    private function makeHeader(string $key, string $value, string $sub = ''): void
     {
-        http_response_code($headers[self::HTTP_STATUS_CODE]);
-
         header(
             sprintf(
-                'Content-Type: %s; charset=utf-8',
-                $this->getContentType()
+                '%s: %s%s', $key, $value, $sub
             )
         );
+    }
 
-        header('message: ' . $headers[self::HTTP_MESSAGE_TEXT]);
+    private function makeHTTPHeaders(array $headers): void
+    {
+        $this->makeHeader('X-Action-Result', $headers[self::HTTP_ACTION_STATUS]);
+        $this->makeHeader('Content-Type', $headers[self::HTTP_ACTION_STATUS], '; charset=utf-8');
+        $this->makeHeader('X-Action-Messages', json_encode($headers[ResponseInterface::MESSAGES]));
 
         http_response_code($headers[self::HTTP_STATUS_CODE]);
     }

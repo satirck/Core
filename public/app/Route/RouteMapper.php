@@ -7,6 +7,8 @@ namespace App\Route;
 use App\Response\HtmlResponse;
 use App\Response\JsonResponse;
 use App\Response\ResponseInterface;
+use App\Route\Controllers\HomeController;
+use App\Route\Controllers\UserController;
 use App\Route\Attributes\{DomainKeyAttribute, MethodRouteAttribute};
 use App\Route\Entities\{ActionEntity, ControllerEntity, MethodParam, RouteEntity};
 use App\Route\Exceptions\{InvalidRouteArgumentException, MissingRouteArgumentException, StatusErrorException};
@@ -108,11 +110,14 @@ class RouteMapper
             self::DOMAIN_KEY_SPECIAL => [],
             self::DOMAIN_KEY_GENERAL => []
         ];
+//
+//        foreach ($controllersEntities as $controllerEntity) {
+//            $controllers[self::DOMAIN_KEY_SPECIAL][$controllerEntity->domainKey][] = $controllerEntity->controller;
+//            $controllers[self::DOMAIN_KEY_GENERAL][] = $controllerEntity->controller;
+//        }
 
-        foreach ($controllersEntities as $controllerEntity) {
-            $controllers[self::DOMAIN_KEY_SPECIAL][$controllerEntity->domainKey][] = $controllerEntity->controller;
-            $controllers[self::DOMAIN_KEY_GENERAL][] = $controllerEntity->controller;
-        }
+        $controllers[self::DOMAIN_KEY_GENERAL][] = UserController::class;
+        $controllers[self::DOMAIN_KEY_GENERAL][] = HomeController::class;
 
         return $controllers;
     }
@@ -368,7 +373,9 @@ class RouteMapper
             $req_headers[self::HTTP_RESPONSE_TYPE] = ResponseInterface::HTTP_DEFAULT_CONTENT_TYPE;
         }
 
-        if (isset($req_headers[self::HTTP_RESPONSE_LAYOUT]) && is_array($req_headers)) {
+        if (isset($req_headers[self::HTTP_RESPONSE_LAYOUT]) ||
+            isset($req_headers[strtolower(self::HTTP_RESPONSE_LAYOUT)]) &&
+            is_array($req_headers)) {
             $onlyInnerContent = true;
         }
 
@@ -400,7 +407,7 @@ class RouteMapper
                 $data,
                 [
                     ResponseInterface::HTTP_STATUS_CODE => $e->getCode(),
-                    ResponseInterface::HTTP_MESSAGE_TEXT => $e->getMessage(),
+                    ResponseInterface::MESSAGES => $e->getMessage(),
                 ]
             );
         }

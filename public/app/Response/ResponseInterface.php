@@ -7,7 +7,8 @@ namespace App\Response;
 interface ResponseInterface
 {
     public const HTTP_STATUS_CODE = 'CODE';
-    public const HTTP_MESSAGE_TEXT = 'MESSAGE';
+    public const MESSAGES = 'MESSAGES';
+    public const HTTP_ACTION_STATUS = 'STATUS';
 
     public const HTTP_DEFAULT_CONTENT_TYPE = 'text/html';
 

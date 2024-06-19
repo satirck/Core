@@ -38,30 +38,5 @@
         "id": 8,
         "name": "Alex",
         "email": "mail.google@google.com"
-    },
-    {
-        "id": 9,
-        "name": "Hola",
-        "email": "retdarkw@gmail.com"
-    },
-    {
-        "id": 10,
-        "name": "Miki",
-        "email": "hola@cool.ru"
-    },
-    {
-        "id": 11,
-        "name": "Darya",
-        "email": "daryazaval@gmail.com"
-    },
-    {
-        "id": 12,
-        "name": "Lesha",
-        "email": "aboba123@not.ru"
-    },
-    {
-        "id": 13,
-        "name": "Alex",
-        "email": "aboba228@not.ru"
     }
 ]

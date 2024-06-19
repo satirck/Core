@@ -23,7 +23,7 @@ class JsonResponse implements ResponseInterface
             )
         );
 
-        header('message: ' . $headers[self::HTTP_MESSAGE_TEXT]);
+        header('message: ' . $headers[self::MESSAGES]);
 
         http_response_code($headers[self::HTTP_STATUS_CODE]);
     }

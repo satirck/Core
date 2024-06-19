@@ -22,7 +22,7 @@ class HomeController implements RouteControllerInterface
     {
         $this->response->view( 'home', [], [
             ResponseInterface::HTTP_STATUS_CODE => 200,
-            ResponseInterface::HTTP_MESSAGE_TEXT => 'Hello at home page',
+            ResponseInterface::HTTP_ACTION_STATUS => 'Hello at home page',
         ]);
     }
 
