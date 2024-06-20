@@ -12,7 +12,7 @@ class JsonResponse implements ResponseInterface
         return 'application/json';
     }
 
-    private function makeHTTPHeaders(array $headers): void
+    private function makeHTTPHeaders(HttpHeaders $headers): void
     {
         http_response_code($headers[self::HTTP_STATUS_CODE]);
 
@@ -28,7 +28,7 @@ class JsonResponse implements ResponseInterface
         http_response_code($headers[self::HTTP_STATUS_CODE]);
     }
 
-    public function view(string $content_view, array $options, array $headers): void
+    public function view(string $content_view, array $options, HttpHeaders $headers): void
     {
         $this->makeHTTPHeaders($headers);
         //TODO: make json response view

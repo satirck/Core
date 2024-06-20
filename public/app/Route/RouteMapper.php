@@ -11,7 +11,10 @@ use App\Route\Controllers\HomeController;
 use App\Route\Controllers\UserController;
 use App\Route\Attributes\{DomainKeyAttribute, MethodRouteAttribute};
 use App\Route\Entities\{ActionEntity, ControllerEntity, MethodParam, RouteEntity};
+use Exception;
 use App\Route\Exceptions\{InvalidRouteArgumentException, MissingRouteArgumentException, StatusErrorException};
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
@@ -20,12 +23,29 @@ class RouteMapper
 {
     private array $routesControllers;
     private ResponseInterface $response;
+    private Logger $logger;
+
     private const REQUEST_INDEX = 'request';
     private const DOMAIN_KEY_SPECIAL = 'special';
     private const DOMAIN_KEY_GENERAL = 'general';
     public const HTTP_RESPONSE_TYPE = 'X-Response-type';
     public const HTTP_REQUEST_TYPE = 'X-Request-type';
     public const HTTP_RESPONSE_LAYOUT = 'X-Response-Layout';
+
+    private function setupLogger(): void
+    {
+        $this->logger = new Logger('logger');
+
+        $this->logger->pushHandler(
+            new StreamHandler('logs/info.log', 'info')
+        );
+        $this->logger->pushHandler(
+            new StreamHandler('logs/debug.log', 'debug')
+        );
+        $this->logger->pushHandler(
+            new StreamHandler('logs/errors.log', 'error')
+        );
+    }
 
     /**
      * @throws ReflectionException
@@ -34,7 +54,12 @@ class RouteMapper
         protected string $controllersFolder
     )
     {
+        $this->setupLogger();
         $this->routesControllers = $this->getControllers();
+
+        $this->logger->info(
+            sprintf('Get controllers: %s', json_encode($this->routesControllers))
+        );
     }
 
     private function getControllerFiles(string $folder): array
@@ -353,13 +378,13 @@ class RouteMapper
         }
 
         $controllerInstance = new $routeEntity->controller(
-            $this->response
+            $this->response,
+            $this->logger
         );
         $action = $routeEntity->action;
 
         $controllerInstance->$action(...$finalParams);
     }
-
 
     /**
      * @return void
@@ -391,25 +416,32 @@ class RouteMapper
     {
         $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
-
         $this->setResponseEntity();
-
-        $data = [];
 
         try {
             $this->dispatch($url, $method);
         } catch (StatusErrorException|InvalidRouteArgumentException|ReflectionException $e) {
-            $data['code'] = $e->getCode();
             $data['message'] = $e->getMessage();
+            $data['code'] = $e->getCode();
 
+            $this->logger->info('Error processing', [
+                'exception' => $e
+            ]);
+
+
+            //TODO make view getting
             $this->response->view(
-                '404',
+                (string)$e->getCode(),
                 $data,
                 [
-                    ResponseInterface::HTTP_STATUS_CODE => $e->getCode(),
-                    ResponseInterface::MESSAGES => $e->getMessage(),
+
                 ]
             );
+
+            echo 'Need to catch';
+        }catch (Exception $exception){
+            //TODO make view getting
+            echo 'Need to catch';
         }
 
     }

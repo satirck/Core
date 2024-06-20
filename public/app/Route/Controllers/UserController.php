@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Route\Controllers;
 
 use App\Repository\RepositoryInterface;
+use App\Response\HttpHeaders;
 use App\Response\ResponseInterface;
 use App\Validation\UserValidator;
 use App\Route\Attributes\{DomainKeyAttribute, MethodRouteAttribute};
@@ -15,6 +16,7 @@ use App\Repository\UserRepository;
 
 use App\Route\Exceptions\StatusErrorException;
 use Exception;
+use Monolog\Logger;
 
 #[DomainKeyAttribute('/users')]
 class UserController implements RouteControllerInterface
@@ -23,7 +25,8 @@ class UserController implements RouteControllerInterface
     protected UserValidator $userValidator;
 
     public function __construct(
-        protected ResponseInterface $response
+        protected ResponseInterface $response,
+        protected Logger            $logger,
     )
     {
         $this->userRepository = new UserRepository();
@@ -33,6 +36,8 @@ class UserController implements RouteControllerInterface
     #[MethodRouteAttribute('GET', '/users')]
     public function index(): void
     {
+        $this->logger->info('get users in UserController at index');
+
         $users = $this->userRepository->getAll();
 
         $data['users'] = $users;
@@ -40,11 +45,10 @@ class UserController implements RouteControllerInterface
         $this->response->view(
             'users',
             $data,
-            [
-                ResponseInterface::HTTP_STATUS_CODE => 200,
-                ResponseInterface::HTTP_ACTION_STATUS => 'Hello at users page',
-                ResponseInterface::MESSAGES => [],
-            ]
+            new HttpHeaders(
+                'Get users',
+                200,
+            )
         );
     }
 
@@ -52,68 +56,78 @@ class UserController implements RouteControllerInterface
      * @throws Exception
      */
     #[MethodRouteAttribute('GET', '/users/{id}')]
-    public function getUserById(int $id): void
+    public function get(int $id): void
     {
+        $this->logger->info('get users in user  at index');
+
         $data = array();
         try {
             $user = $this->userRepository->getById($id);
             $data['user'] = $user;
+
+            $this->logger->info(
+                sprintf('Get user with id %s', $id)
+            );
         } catch (EntityNotFoundException $exception) {
+            $this->logger->warning(
+                sprintf('Not found user with id %s', $id)
+            );
+
             throw new StatusErrorException($exception->getMessage(), 404);
         }
 
         $this->response->view(
             'user',
             $data,
-            [
-                ResponseInterface::HTTP_STATUS_CODE => 200,
-                ResponseInterface::HTTP_ACTION_STATUS => 'Hello at user page',
-                ResponseInterface::MESSAGES => [],
-            ]
+            new HttpHeaders(
+                'Get user',
+                200,
+            )
         );
-    }
-
-    private function setBadRequestHeaders(): array
-    {
-        $headers[ResponseInterface::MESSAGES] = json_encode(
-            $this->userValidator->getMessages()
-        );
-        $headers[ResponseInterface::HTTP_STATUS_CODE] = 400;
-        $headers[ResponseInterface::HTTP_ACTION_STATUS] = 'Failed saving!';
-
-        return $headers;
     }
 
     #[MethodRouteAttribute('POST', '/users')]
-    public function createUser(User $user): void
+    public function save(User $user): void
     {
         $data = array();
-
 
         $this->userValidator->setUser($user);
         $shouldSave = $this->userValidator->validate();
 
         if (!$shouldSave) {
-            $headers = $this->setBadRequestHeaders();
+            $this->logger->warning(
+                sprintf(
+                    'Cannot save user. Reasons: %s',
+                    json_encode(
+                        $this->userValidator->getMessages()
+                    )
+                )
+            );
 
-        }else{
-            $headers[ResponseInterface::MESSAGES] = [];
+            $this->response->view(
+                '400',
+                $data,
+                new HttpHeaders(
+                    'Error saving users',
+                    400
+                )
+            );
+        } else {
             $savedUserJson = $this->userRepository->save(json_encode($user));
             $savedUser = User::fromJson($savedUserJson);
-            $headers[ResponseInterface::HTTP_ACTION_STATUS] =
-                sprintf(
-                    'Saved with id [%s]!',
-                    $savedUser->getId()
-                );
             $data['user'] = $savedUser;
+
+            $this->response->view(
+                'user',
+                $data,
+                new HttpHeaders(
+                    sprintf(
+                        'Saved with id [%s]!',
+                        $savedUser->getId()
+                    ),
+                    201
+                )
+            );
         }
-
-        $this->response->view(
-            'user',
-            $data,
-            $headers
-        );
     }
-
-
 }

@@ -28,16 +28,19 @@ class HtmlResponse implements ResponseInterface
         );
     }
 
-    private function makeHTTPHeaders(array $headers): void
+    private function makeHTTPHeaders(HttpHeaders $headers): void
     {
-        $this->makeHeader('X-Action-Result', $headers[self::HTTP_ACTION_STATUS]);
-        $this->makeHeader('Content-Type', $headers[self::HTTP_ACTION_STATUS], '; charset=utf-8');
-        $this->makeHeader('X-Action-Messages', json_encode($headers[ResponseInterface::MESSAGES]));
+        $this->makeHeader('X-Action-Result', $headers->status);
+        $this->makeHeader('Content-Type', $this->getContentType(), '; charset=utf-8');
 
-        http_response_code($headers[self::HTTP_STATUS_CODE]);
+        if (isset($headers->messages)){
+            $this->makeHeader('X-Action-Messages', json_encode($headers->messages));
+        }
+
+        http_response_code($headers->code);
     }
 
-    public function view(string $content_view, array $options, array $headers): void
+    public function view(string $content_view, array $options, HttpHeaders $headers): void
     {
         self::makeHTTPHeaders($headers);
 
