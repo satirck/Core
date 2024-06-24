@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Route;
 
 use App\Response\HtmlResponse;
+use App\Response\HttpHeaders;
 use App\Response\JsonResponse;
 use App\Response\ResponseInterface;
 use App\Route\Controllers\HomeController;
@@ -37,13 +38,16 @@ class RouteMapper
         $this->logger = new Logger('logger');
 
         $this->logger->pushHandler(
-            new StreamHandler('logs/info.log', 'info')
+            new StreamHandler('logs/debug.log', 'debug', false)
         );
         $this->logger->pushHandler(
-            new StreamHandler('logs/debug.log', 'debug')
+            new StreamHandler('logs/info.log', 'info', false)
         );
         $this->logger->pushHandler(
-            new StreamHandler('logs/errors.log', 'error')
+            new StreamHandler('logs/warnings.log', 'warning', false)
+        );
+        $this->logger->pushHandler(
+            new StreamHandler('logs/errors.log', 'error', false)
         );
     }
 
@@ -424,24 +428,21 @@ class RouteMapper
             $data['message'] = $e->getMessage();
             $data['code'] = $e->getCode();
 
-            $this->logger->info('Error processing', [
+            $this->logger->warning('Error processing', [
                 'exception' => $e
             ]);
 
-
-            //TODO make view getting
             $this->response->view(
                 (string)$e->getCode(),
                 $data,
-                [
-
-                ]
+                new HttpHeaders(
+                    $e->getMessage(),
+                    $e->getCode()
+                )
             );
-
-            echo 'Need to catch';
-        }catch (Exception $exception){
-            //TODO make view getting
-            echo 'Need to catch';
+        } catch (Exception $exception) {
+            $this->logger->warning('Unhandled exception', ['exception' => $exception]);
+            echo $exception->getMessage();
         }
 
     }

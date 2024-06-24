@@ -19,10 +19,10 @@ abstract class AbstractValidator implements ValidationInterface
 
         if ($len < $min) {
             $this->messages[$associateName][] =
-                sprintf('Length of given %s is less than %d minimal', $str, $min);
+                sprintf('Length of given "%s" is less than %d', $str, $min);
         } else {
             $this->messages[$associateName][] =
-                sprintf('Length of given %s is more than %d maximal', $str, $max);
+                sprintf('Length of given "%s" is more than %d', $str, $max);
         }
 
         $this->isValid = false;
@@ -35,10 +35,10 @@ abstract class AbstractValidator implements ValidationInterface
 
         if ($value < $min) {
             $this->messages[$associateName][] =
-                sprintf('Value of given %d is less than %d minimal', $value, $min);
+                sprintf('Value of given %d is less than %d', $value, $min);
         } else {
             $this->messages[$associateName][] =
-                sprintf('Value of given %d is more than %d maximal', $value, $max);
+                sprintf('Value of given %d is more than %d', $value, $max);
         }
 
         $this->isValid = false;

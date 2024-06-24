@@ -96,20 +96,16 @@ class UserController implements RouteControllerInterface
 
         if (!$shouldSave) {
             $this->logger->warning(
-                sprintf(
-                    'Cannot save user. Reasons: %s',
-                    json_encode(
-                        $this->userValidator->getMessages()
-                    )
-                )
+                'Cannot save user. Reasons:', $this->userValidator->getMessages()
             );
 
             $this->response->view(
-                '400',
+                '',
                 $data,
                 new HttpHeaders(
-                    'Error saving users',
-                    400
+                    'Error saving user',
+                    404,
+                    $this->userValidator->getMessages()
                 )
             );
         } else {
@@ -118,7 +114,7 @@ class UserController implements RouteControllerInterface
             $data['user'] = $savedUser;
 
             $this->response->view(
-                'user',
+                '',
                 $data,
                 new HttpHeaders(
                     sprintf(

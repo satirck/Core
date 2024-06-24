@@ -8,11 +8,6 @@
     <title>In future</title>
 </head>
 <body>
-
-<h1>
-    With the defaults page
-</h1>
-
 <?php
 if (isset($content_view)) {
     require_once $content_view;

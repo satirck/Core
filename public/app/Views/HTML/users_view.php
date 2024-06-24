@@ -37,15 +37,14 @@
         </label>
     </form>
 
-    <button onclick="sendRequest()">Send</button>
+    <button onclick="saveUser('name', 'email', 'users_view')">Send</button>
 
     <script>
-        function sendRequest() {
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+        function saveUser(name, email, contentID) {
+            const sName = document.getElementById(name).value;
+            const sEmail = document.getElementById(email).value;
 
-
-            const data = {id: 0, name: name, email: email};
+            const data = {id: 0, name: sName, email: sEmail};
             const encodedData = `user=${encodeURIComponent(JSON.stringify(data))}`;
 
             fetch('http://localhost/users', {
@@ -57,20 +56,31 @@
                 },
                 body: encodedData
             }).then(response => {
-                let jsonMessage = response.headers.get('x-action-Messages');
-                let messages = JSON.parse(jsonMessage)
+                if (!response.ok) {
+                    throw new Error('Server returned error with status' + response.status)
+                }
 
-                console.log(messages)
+                let jsonMessage = response.headers.get('x-action-Messages');
+                if (jsonMessage != null) {
+                    let messages = JSON.parse(jsonMessage)
+                    if (response.ok) {
+                        updatePartContent(contentID)
+                    }
+                    console.log(messages)
+                }
+
+            }).catch(error => {
+                console.log(error)
             })
         }
 
-        function updatePartContent() {
+        function updatePartContent(contentID) {
             fetch('http://localhost/users', {
+                method: 'GET',
                 headers: new Headers({
                     'Content-type': 'text/html',
                     'X-Response-Layout': 'part',
                     'X-Response-type': 'text/html',
-
                 })
             })
                 .then(response => response.text())

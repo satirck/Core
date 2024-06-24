@@ -42,6 +42,8 @@ class HtmlResponse implements ResponseInterface
 
     public function view(string $content_view, array $options, HttpHeaders $headers): void
     {
+        $cur_resp_headers = apache_request_headers();
+
         self::makeHTTPHeaders($headers);
 
         $content_view = sprintf('app/Views/HTML/%s_view.php', $content_view);
