@@ -8,9 +8,7 @@ class HtmlResponse implements ResponseInterface
 {
     private const DEFAULT_GENERAL_VIEWS_PATH = 'app/Views/HTML/general_view.php';
 
-    public function __construct(
-        protected bool $onlyContent = false
-    )
+    public function __construct()
     {
     }
 
@@ -53,7 +51,7 @@ class HtmlResponse implements ResponseInterface
                 extract($options, EXTR_PREFIX_SAME, 'data_');
             }
 
-            require_once $this->onlyContent ? $content_view : self::DEFAULT_GENERAL_VIEWS_PATH;
+            require_once self::DEFAULT_GENERAL_VIEWS_PATH;
         }
     }
 }
