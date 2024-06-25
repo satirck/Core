@@ -118,7 +118,7 @@ class UserController implements RouteControllerInterface
                 $data,
                 new HttpHeaders(
                     sprintf(
-                        'Saved with id [%s]!',
+                        'Saved  with id [%s]!',
                         $savedUser->getId()
                     ),
                     201
